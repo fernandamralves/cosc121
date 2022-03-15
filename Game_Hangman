@@ -1,0 +1,158 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.InputMismatchException;
+import java.util.Scanner;
+
+public class GameNew {
+
+	ArrayList<String> list;
+	private String randomWord;
+	ArrayList<Character> lettersInRandom;
+	ArrayList<Character> userGuessedTotalLetters;
+	private char guess; //input letter
+	ArrayList<Character> correctGuesses;
+	ArrayList<Character> wrongGuesses;
+	static int score;
+	static boolean isGameOver;
+	static int counter;
+	static int scoreSum;
+	private String uGuess;
+	private int guesses; //number of guesses make
+	private int guessesLeft; //number of guesses left
+	private String incGuesses; //output incorrect guesses
+	static boolean isNotHanged;
+
+
+	public GameNew(ArrayList<String> list) {
+		this.list = list;
+		this.randomWord = randomW(list);
+		this.lettersInRandom = new ArrayList<>(); //array of chars with letters from random word
+		this.userGuessedTotalLetters = new ArrayList<>(); //array that stores user guesses
+		this.guess = ' '; //user guess transfered to a char
+		this.correctGuesses = new ArrayList<>();
+		this.wrongGuesses = new ArrayList<>();
+		this.isGameOver = false;
+		this.counter = 0;
+		this.score += score;
+		this.uGuess = ""; //user guess as String
+		this.guesses = 0;
+		this.guessesLeft = 7;
+		this.incGuesses = "";
+		this.isNotHanged = false;
+	}	
+
+	public String randomW(ArrayList<String> list) { //Generates Random Word from Dictionary
+		randomWord = list.get((int)(Math.random() * list.size() + 1)).toUpperCase();
+		return randomWord;
+	}
+
+	public void savingWords() { //transform randomWord into ArrayList letters
+		for (int i = 0; i < randomWord.length(); i++) {
+			char c = randomWord.charAt(i);
+			lettersInRandom.add(c);
+		}
+	}
+
+	public void getGuess() { //input guesses from user
+		boolean correctLetter = false;
+
+		System.out.print("Enter guess: ");
+		Scanner inputGuess = new Scanner(System.in);
+		uGuess = inputGuess.next().toUpperCase();
+		try {
+			char c = uGuess.charAt(0);
+			if (correctGuesses.contains(uGuess)) { 
+				throw new Exception("You have already guessed " + uGuess); 
+			}
+			if (wrongGuesses.contains(uGuess)) { 
+				throw new Exception("You have already guessed " + uGuess); 
+			}
+			if (uGuess.length() == 1) { 
+				if (Character.isWhitespace(c)) { 
+					throw new Exception("Don't try me!"); 
+				} else { throw new Exception("Please do this right!"); 
+				}
+			}
+
+			if (uGuess.length() != 1) { throw new Exception("Come on, you can do this!"); }
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		guess = uGuess.charAt(0);
+
+		for (int i = 0; i < randomWord.length(); i++) {
+			char c = randomWord.charAt(i);
+			if (!correctGuesses.contains(guess) && c == guess) {
+				score += 10;
+				lettersInRandom.remove(Character.valueOf(guess));
+				counter++;
+				correctLetter = true;
+			} 
+		}
+		if (!correctLetter) {
+			wrongGuesses.add(guess);
+			guessesLeft -= 1;
+		}
+		correctGuesses.add(guess);
+		userGuessedTotalLetters.add(guess); 
+		System.out.println();
+	}
+
+	public void playGame() {
+
+		randomW(list);
+		savingWords();
+		while (!isGameOver) {
+
+			System.out.println();
+			System.out.println(randomWord);
+
+			System.out.print("Hidden word: ");
+			for (char c : randomWord.toCharArray()) { //PRINTING WITH DASH
+				if (correctGuesses.contains(c)) { System.out.print(c + " "); } 
+				else { System.out.print('_' + " "); }
+			}
+
+			System.out.println();
+			getGuess();
+
+			System.out.print("Incorrect guesses: "); //SORTING AND PRINTING THE INCORRECT GUESSES
+			Collections.sort(wrongGuesses);
+			for (int i = 0; i < wrongGuesses.size(); i++) {
+				char c = wrongGuesses.get(i);
+				if ((randomWord.contains("" + c) == false) && (i != wrongGuesses.size() -1)) {
+					System.out.print(c + ", ");
+				}
+			}
+
+			System.out.println();
+			System.out.println("Guesses left: " + guessesLeft);
+			System.out.println("Score: " + score);
+
+
+			if (guessesLeft == 0) { 
+				System.out.println("\nSorry bud, you lost!! The person was hanged     -.-     The word you missed was " + randomWord + ". But on the bright side, at least you got " + score + " points."); 
+				HangmanNew.keepPlaying =false; 
+				isGameOver = true;
+			}
+
+			if (lettersInRandom.isEmpty() && counter > 0) { 
+
+				scoreSum = (counter * 10) + (guessesLeft * 30) + 100;
+
+				System.out.println("\nCongratulations!! You manage to not hang the person!!");
+				System.out.print("So far you have " + scoreSum + " points. Congrats!"); 
+				System.out.println();
+				HangmanNew.keepPlaying = true; 
+				isGameOver = false; 
+				randomW(list); 
+				savingWords(); 
+				correctGuesses.clear(); 
+				wrongGuesses.clear(); 
+				userGuessedTotalLetters.clear(); 
+				guessesLeft = 7;	
+			}
+		}
+	}
+}
