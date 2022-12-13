@@ -1,0 +1,19 @@
+Array Size	Heap Time	Tree Time
+1000			1			374
+5000			2			1644
+10000			7			1940
+50000			21			3156
+100000			24			3506
+150000			34			5005
+200000			74			5937
+
+The worst case scenario of each is:
+	HeapSort is O(n log n)
+	TreeSort is O(n^2)
+
+HeapSort works putting the largest number on the root of the tree using heapify.
+While TreeSort uses inorder traversal.
+	
+Most of the places I searched ignored duplicate values for TreeSort causing the array to be smaller. In my code I accepted values that were equal.
+
+//Sorry Sarah, I couldn't add the chart here.
