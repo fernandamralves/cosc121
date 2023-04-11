@@ -1,0 +1,185 @@
+import java.util.*;
+import java.io.*;
+import java.math.*;
+
+/**
+ * Grab Snaffles and try to throw them through the opponent's goal!
+ * Move towards a Snaffle and use your team id to determine where you need to throw it.
+ **/
+class Player {
+
+    public static void main(String args[]) {
+        Scanner in = new Scanner(System.in);
+        int myTeamId = in.nextInt(); // if 0 you need to score on the right of the map, if 1 you need to score on the left
+
+        // game loop
+        while (true) {
+            int myScore = in.nextInt();
+            int myMagic = in.nextInt();
+            int opponentScore = in.nextInt();
+            int opponentMagic = in.nextInt();
+            int entities = in.nextInt(); // number of entities still in game
+            ArrayList<Wizard> myWizards = new ArrayList<>();
+            ArrayList<Snaffle> snaffles = new ArrayList<>();
+            ArrayList<Blood> blood = new ArrayList<>();
+            ArrayList<Opp> opponent = new ArrayList<>();
+
+            for (int i = 0; i < entities; i++) {
+                int entityId = in.nextInt(); // entity identifier
+                String entityType = in.next(); // "WIZARD", "OPPONENT_WIZARD" or "SNAFFLE" (or "BLUDGER" after first league)
+                int x = in.nextInt(); // position
+                int y = in.nextInt(); // position
+                int vx = in.nextInt(); // velocity
+                int vy = in.nextInt(); // velocity
+                int state = in.nextInt(); // 1 if the wizard is holding a Snaffle, 0 otherwise
+                if (entityType.equals("WIZARD")) { 
+                    myWizards.add(new Wizard(entityId, x, y, vx, vy, state)); 
+                } else if (entityType.equals("SNAFFLE")) { 
+                    snaffles.add(new Snaffle(entityId, x, y, vx, vy, state)); 
+                } else if (entityType.equals("BLUDGER")) { 
+                    blood.add(new Blood(entityId, x, y, vx, vy, state)); 
+                } else if (entityType.equals("OPPONENT_WIZARD")) { 
+                    opponent.add(new Opp(entityId, x, y, vx, vy, state)); 
+                }
+            }
+
+            
+            for (int i = 0; i < 2; i++) {
+               
+                if(myWizards.get(i).state == 0) {
+
+                    int closeBlood = 0;
+                    //for (int k = 0; k < blood.size(); k++) {
+                        double closeDistBlood = distanceFormulaBlood(myWizards.get(i), blood.get(0));
+                        for (int a = 1; a < blood.size(); a++) {
+                            double tempDistanceBlood = distanceFormulaBlood(myWizards.get(i), blood.get(a));
+                            if(tempDistanceBlood < closeDistBlood) {
+                                closeDistBlood = tempDistanceBlood;
+                                closeBlood = a;
+                            }
+                       }
+                    //}
+
+                    int closeSnaffle = 0;
+                    double closeDist = distanceFormula(myWizards.get(i), snaffles.get(0));
+                    for (int j = 1; j < snaffles.size(); j++) {
+                        double tempDistance = distanceFormula(myWizards.get(i), snaffles.get(j));
+                        if(tempDistance < closeDist) {
+                            closeDist = tempDistance;
+                            closeSnaffle = j;
+                       }
+                    }
+
+                    int closeOpp = 0;
+                    for (int c = 0; c < blood.size(); c++) {
+                        double tempDistOpp = distanceFormulaOpp(myWizards.get(c), opponent.get(0));
+                        for (int b = 1; b < blood.size(); b++) {
+                            double tempDistanceOpp = distanceFormulaOpp(myWizards.get(c), opponent.get(b));
+                            if(tempDistanceOpp < tempDistOpp) {
+                                tempDistOpp = tempDistanceOpp;
+                                closeOpp = c;
+                            }
+                       }
+                    }
+
+                    if (myMagic >= 20 && myWizards.get(i).state == 0) {
+                        System.out.println("FLIPENDO " + snaffles.get(closeSnaffle).id);
+                        myMagic -= 20;
+                    } 
+                    else if (myMagic >= 15 && myWizards.get(i).state == 0) {
+                        System.out.println("ACCIO " + snaffles.get(closeSnaffle).id);
+                        myMagic -= 15;
+                    } 
+                    //else if (myMagic >= 5 && myWizards.get(i).state == 0) {
+                     //   System.out.println("OBLIVATE " + myWizards.get(i).getID());
+                      //  myMagic -= 5;
+                   // } 
+                    else {
+                        System.out.println("MOVE " + snaffles.get(closeSnaffle).x + " " + snaffles.get(closeSnaffle).y + " 150");
+                    }
+                    if(snaffles.size() > 1) {
+                        snaffles.remove(closeSnaffle);
+                    }
+                
+                
+                } else {
+                    if (myTeamId == 0 && myWizards.get(i).state == 1) {
+                        System.out.println("THROW 16000 3750 500");
+                    } else if (myTeamId == 1 && myWizards.get(i).state == 1) {
+                        System.out.println("THROW 0 3750 500");
+                    }
+                }                
+            }
+            myMagic++;
+        }
+    }
+    public static double distanceFormula(Wizard w, Snaffle s) {
+        return Math.sqrt((w.y - s.y)*(w.y - s.y) + (w.x - s.x)*(w.x - s.x));
+    }
+    public static double distanceFormulaBlood(Wizard w, Blood b) {
+        return Math.sqrt((w.y - b.y)*(w.y - b.y) + (w.x - b.x)*(w.x - b.x));
+    }
+    public static double distanceFormulaOpp(Wizard w, Opp p) {
+        return Math.sqrt((w.y - p.y)*(w.y - p.y) + (w.x - p.x)*(w.x - p.x));
+    }
+}
+abstract class Model {
+    int id;
+    int x; 
+    int y;
+    int vx; 
+    int vy;
+    int state;
+
+    public Model(int id, int x, int y, int vx, int vy, int state) {
+        this.id = id;
+        this.x = x; 
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.state = state;
+    }
+    
+    public int getID() { 
+        return id; 
+    }
+    public int getX() { 
+        return x; 
+    }
+    public int getY() { 
+        return y; 
+    }
+    public int getVX() { 
+        return vx; 
+    }
+    public int getVY() { 
+        return vy; 
+    }
+    public int getState() { 
+        return state; 
+    }
+}
+
+class Wizard extends Model {
+    public Wizard(int id, int x, int y, int vx, int vy, int state) {
+       super(id, x, y, vx, vy, state);
+    }
+}
+class Snaffle extends Model {
+    public Snaffle(int id, int x, int y, int vx, int vy, int state) {
+       super(id, x, y, vx, vy, state);
+    }
+}
+class Blood extends Model {
+    public Blood(int id, int x, int y, int vx, int vy, int state) {
+       super(id, x, y, vx, vy, state);
+    }
+}
+class Opp extends Model {
+    public Opp(int id, int x, int y, int vx, int vy, int state) {
+       super(id, x, y, vx, vy, state);
+    }
+}
+
+
+
